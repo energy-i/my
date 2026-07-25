@@ -1,9 +1,10 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
   createFileRoute,
   Link,
   notFound,
   Outlet,
+  useMatches,
 } from "@tanstack/react-router";
 
 import {
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { getSite } from "@/lib/api";
+import { getSite, getSiteAreas } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 
 export const Route = createFileRoute("/_authed/sites/$id")({
@@ -36,6 +37,31 @@ function SiteLayout() {
     queryKey: queryKeys.site(id),
     queryFn: () => getSite(id),
   });
+
+  // Inspect the currently-matched leaf route so the breadcrumb can adapt
+  // to whichever sub-page the user is on (edit, area detail, etc.).
+  const matches = useMatches();
+  const areaMatch = matches.find(
+    (m) => m.routeId === "/_authed/sites/$id/areas/$areaId",
+  );
+  const editMatch = matches.find(
+    (m) => m.routeId === "/_authed/sites/$id/edit",
+  );
+
+  const areaId = (areaMatch?.params as { areaId?: string } | undefined)?.areaId;
+  const { data: areas } = useQuery({
+    queryKey: queryKeys.siteAreas(id),
+    queryFn: () => getSiteAreas(id),
+    enabled: Boolean(areaId),
+  });
+  const areaName =
+    areaId != null ? (areas?.find((a) => a.id === areaId)?.name ?? null) : null;
+
+  const trailingCrumb = areaMatch
+    ? (areaName ?? "Area")
+    : editMatch
+      ? "Edit"
+      : null;
 
   if (!site) return null;
 
@@ -62,9 +88,25 @@ function SiteLayout() {
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
-              <BreadcrumbPage className="hidden md:block">
-                {site.name}
-              </BreadcrumbPage>
+              {trailingCrumb !== null ? (
+                <>
+                  <BreadcrumbItem className="hidden md:block">
+                    <BreadcrumbLink asChild>
+                      <Link to="/sites/$id" params={{ id }}>
+                        {site.name}
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbPage className="hidden md:block">
+                    {trailingCrumb}
+                  </BreadcrumbPage>
+                </>
+              ) : (
+                <BreadcrumbPage className="hidden md:block">
+                  {site.name}
+                </BreadcrumbPage>
+              )}
             </BreadcrumbList>
           </Breadcrumb>
         </div>

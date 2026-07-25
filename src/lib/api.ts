@@ -149,6 +149,21 @@ export async function getSiteConsumption(
   return consumption;
 }
 
+export async function getAreaConsumption(
+  id: string,
+  params: { from: string; to: string; interval?: ConsumptionInterval },
+): Promise<Consumption> {
+  const search = new URLSearchParams({
+    from: params.from,
+    to: params.to,
+    interval: params.interval ?? "day",
+  });
+  const { consumption } = await apiFetch<{ consumption: Consumption }>(
+    `/areas/${id}/consumption?${search.toString()}`,
+  );
+  return consumption;
+}
+
 export async function getSiteAlerts(
   siteId: string,
   params: { page?: number; pageSize?: number } = {},

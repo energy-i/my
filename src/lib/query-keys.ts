@@ -15,6 +15,8 @@ export const queryKeys = {
     ["sites", id, "alerts", params] as const,
   siteConsumption: (id: string, range: string) =>
     ["sites", id, "consumption", range] as const,
+  areaConsumption: (id: string, range: string) =>
+    ["areas", id, "consumption", range] as const,
   alerts: (params: {
     view: "active" | "snoozed";
     page: number;
