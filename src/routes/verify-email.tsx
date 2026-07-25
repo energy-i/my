@@ -50,25 +50,12 @@ function VerifyEmailPage() {
       <div className="w-full max-w-sm md:max-w-4xl">
         <div className="flex flex-col gap-6">
           <Card className="overflow-hidden p-0">
-            <CardContent className="grid p-0 md:grid-cols-2">
-              <div className="p-6 md:p-8">
-                <div className="flex items-center justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
-              </div>
-              <div className="relative hidden bg-muted md:block">
-                <img
-                  src="/renewable-energy.webp"
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
+            <CardContent className="p-6 md:p-8">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             </CardContent>
           </Card>
-          <FieldDescription className="px-6 text-center">
-            By clicking continue, you agree to our{" "}
-            <a href="#">Terms of Service</a>.
-          </FieldDescription>
         </div>
       </div>
     </div>

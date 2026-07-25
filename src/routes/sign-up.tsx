@@ -164,7 +164,8 @@ function SignUpPage() {
             </CardContent>
           </Card>
           <FieldDescription className="px-6 text-center">
-            By continuing, you agree to our <a href="#">Terms of Service</a>.
+            By continuing, you agree to our{" "}
+            <a href="https://www.energy-i.ai/terms">Terms of Service</a>.
           </FieldDescription>
         </div>
       </div>
