@@ -27,23 +27,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Copy env file
-        run: |
-          cp .env.example .env
-          echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)" >> .env
-
-      - name: Start services
-        run: docker compose up -d --wait
-
-      - name: Run migrations
-        run: npx prisma migrate deploy
-
-      - name: Seed database
-        run: npm run db:seed
-
       - name: Browser testing
         uses: cypress-io/github-action@v7
         with:
           build: npm run build
-          start: npm run start
+          start: npm run dev
           wait-on: "http://localhost:3000"
