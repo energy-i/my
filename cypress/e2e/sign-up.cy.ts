@@ -24,7 +24,7 @@ describe("Auth - Sign Up", () => {
     cy.get("#password").type("securepassword");
     cy.get('button[type="submit"]').click();
 
-    cy.get("[data-sonner-toast]").should("be.visible");
+    cy.get('[role="alert"]').should("be.visible");
   });
 
   it("signs up successfully with valid details", () => {

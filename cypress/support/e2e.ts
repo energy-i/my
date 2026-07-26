@@ -15,3 +15,20 @@
 
 // Import commands.js using ES2015 syntax:
 import "./commands";
+
+import { installApiStubs } from "./api-stubs";
+
+// Stub every API request so tests never hit the real backend. Individual
+// tests can still register more specific `cy.intercept` calls after this
+// runs — later intercepts take precedence.
+beforeEach(() => {
+  cy.env(["API_BASE_URL"]).then((values) => {
+    const apiBaseUrl =
+      values && typeof values === "object" && "API_BASE_URL" in values
+        ? (values as Record<string, unknown>).API_BASE_URL
+        : Array.isArray(values)
+          ? values[0]
+          : values;
+    installApiStubs(String(apiBaseUrl ?? ""));
+  });
+});
