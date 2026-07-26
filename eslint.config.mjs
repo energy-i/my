@@ -41,10 +41,7 @@ const eslintConfig = [
       // used pragmatically throughout the codebase and in shadcn/ui hooks.
       "react-hooks/purity": "off",
       "react-hooks/set-state-in-effect": "off",
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      "react-refresh/only-export-components": "off",
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
     },

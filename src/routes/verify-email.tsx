@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import * as z from "zod";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { FieldDescription } from "@/components/ui/field";
 import { verifyEmail } from "@/lib/auth-client";
 
 const searchSchema = z.object({
