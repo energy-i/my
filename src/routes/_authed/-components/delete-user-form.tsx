@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,10 +21,14 @@ import type { User } from "@/lib/types";
 const DeleteUserForm = ({ user }: { user: User }) => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   const mutation = useMutation({
     mutationFn: () => deleteUser(user.id),
     onSuccess: async () => {
+      if (posthog) {
+        posthog.capture("user_removed");
+      }
       toast.success("User deleted", {
         description: `${user.name} has been removed from your organisation.`,
       });

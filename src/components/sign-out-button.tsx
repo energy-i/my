@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -6,10 +7,15 @@ import { signOut } from "@/lib/auth-client";
 const SignOutButton = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   return (
     <button
-      onClick={() =>
+      onClick={() => {
+        if (posthog) {
+          posthog.capture("user_signed_out");
+          posthog.reset();
+        }
         signOut({
           fetchOptions: {
             onSuccess: () => {
@@ -20,8 +26,8 @@ const SignOutButton = () => {
               navigate({ to: "/sign-in" });
             },
           },
-        })
-      }
+        });
+      }}
     >
       Sign out
     </button>

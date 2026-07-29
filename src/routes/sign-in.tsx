@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { InfoIcon, Loader2 } from "lucide-react";
@@ -36,6 +37,7 @@ function SignInPage() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -54,6 +56,13 @@ function SignInPage() {
       setError(data.error.message || "An error occurred during sign in");
       setLoading(false);
     } else {
+      if (posthog && data.data?.user) {
+        posthog.identify(data.data.user.id, {
+          name: data.data.user.name,
+          email: data.data.user.email,
+        });
+        posthog.capture("user_signed_in");
+      }
       // Drop the cached `null` from the pre-login `getMe()` check so the
       // `_authed` guard refetches with the fresh session cookie instead of
       // bouncing us straight back to /sign-in. `removeQueries` deletes the

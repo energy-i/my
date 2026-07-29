@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
@@ -96,6 +97,7 @@ type AlertItem = SiteAlert & {
 
 export function AlertsList({ alerts }: { alerts: AlertItem[] }) {
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   const mutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: AlertPatch }) =>
@@ -124,7 +126,15 @@ export function AlertsList({ alerts }: { alerts: AlertItem[] }) {
     );
   };
 
-  const handleSnooze = (alert: AlertItem) =>
+  const handleSnooze = (alert: AlertItem) => {
+    if (posthog) {
+      posthog.capture("alert_snoozed", {
+        alert_id: alert.id,
+        alert_type: alert.type,
+        site_id: alert.siteId,
+        snooze_hours: SNOOZE_HOURS,
+      });
+    }
     runPatch(
       alert,
       {
@@ -135,6 +145,7 @@ export function AlertsList({ alerts }: { alerts: AlertItem[] }) {
       `Snoozed for ${SNOOZE_HOURS} hours`,
       "Failed to snooze alert",
     );
+  };
 
   const handleUnsnooze = (alert: AlertItem) =>
     runPatch(
@@ -144,13 +155,21 @@ export function AlertsList({ alerts }: { alerts: AlertItem[] }) {
       "Failed to unsnooze alert",
     );
 
-  const handleDismiss = (alert: AlertItem) =>
+  const handleDismiss = (alert: AlertItem) => {
+    if (posthog) {
+      posthog.capture("alert_dismissed", {
+        alert_id: alert.id,
+        alert_type: alert.type,
+        site_id: alert.siteId,
+      });
+    }
     runPatch(
       alert,
       { dismissedAt: new Date().toISOString() },
       "Dismissed",
       "Failed to dismiss alert",
     );
+  };
 
   const pendingId =
     mutation.isPending && mutation.variables ? mutation.variables.id : null;

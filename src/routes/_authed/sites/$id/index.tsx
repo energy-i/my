@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ChevronRightIcon, InfoIcon } from "lucide-react";
@@ -53,6 +54,7 @@ function SiteDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate({ from: "/sites/$id" });
   const { tab = "consumption" } = Route.useSearch();
+  const posthog = usePostHog();
 
   // The parent `$id.tsx` route already ensured the site loads. Reading it
   // here from the same query key just hits the cache.
@@ -63,6 +65,9 @@ function SiteDetailPage() {
 
   const handleTabChange = (next: string) => {
     if (next === tab) return;
+    if (posthog) {
+      posthog.capture("site_tab_changed", { tab: next, site_id: id });
+    }
     navigate({
       search: (prev) => ({
         ...prev,

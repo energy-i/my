@@ -1,0 +1,62 @@
+[
+  {
+    "event_name": "user_signed_in",
+    "event_description": "User successfully signs in with email and password.",
+    "file": "src/routes/sign-in.tsx"
+  },
+  {
+    "event_name": "user_signed_up",
+    "event_description": "User creates a new account with name, organisation, email, and password.",
+    "file": "src/routes/sign-up.tsx"
+  },
+  {
+    "event_name": "user_signed_out",
+    "event_description": "User clicks the sign-out button and their session ends.",
+    "file": "src/components/sign-out-button.tsx"
+  },
+  {
+    "event_name": "password_reset_requested",
+    "event_description": "User submits the forgot-password form to receive a reset link.",
+    "file": "src/routes/forgot-password.tsx"
+  },
+  {
+    "event_name": "site_tab_changed",
+    "event_description": "User switches between consumption, alerts, or details tabs on a site detail page.",
+    "file": "src/routes/_authed/sites/$id/index.tsx"
+  },
+  {
+    "event_name": "site_edited",
+    "event_description": "User successfully saves changes to a site's details via the edit form.",
+    "file": "src/routes/_authed/sites/$id/-components/edit-site-form.tsx"
+  },
+  {
+    "event_name": "consumption_range_changed",
+    "event_description": "User changes the date range selector on a consumption chart.",
+    "file": "src/components/consumption-chart.tsx"
+  },
+  {
+    "event_name": "alert_snoozed",
+    "event_description": "User snoozes an alert, opportunity, or insight for 24 hours.",
+    "file": "src/components/alerts-list.tsx"
+  },
+  {
+    "event_name": "alert_dismissed",
+    "event_description": "User permanently dismisses an alert, opportunity, or insight.",
+    "file": "src/components/alerts-list.tsx"
+  },
+  {
+    "event_name": "alerts_filter_changed",
+    "event_description": "User applies or removes a type filter (Alert, Opportunity, Insight) on the alerts page.",
+    "file": "src/routes/_authed/alerts.tsx"
+  },
+  {
+    "event_name": "user_invited",
+    "event_description": "Admin successfully invites a new user to the organisation.",
+    "file": "src/routes/_authed/-components/create-user-form.tsx"
+  },
+  {
+    "event_name": "user_removed",
+    "event_description": "Admin permanently deletes a user from the organisation.",
+    "file": "src/routes/_authed/-components/delete-user-form.tsx"
+  }
+]

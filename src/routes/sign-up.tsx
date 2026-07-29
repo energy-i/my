@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { InfoIcon, Loader2 } from "lucide-react";
@@ -26,6 +27,7 @@ function SignUpPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
 
   async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,6 +48,13 @@ function SignUpPage() {
       setError(data.error.message || "An error occurred during sign in");
       setLoading(false);
     } else {
+      if (posthog && data.data?.user) {
+        posthog.identify(data.data.user.id, {
+          name: data.data.user.name,
+          email: data.data.user.email,
+        });
+        posthog.capture("user_signed_up");
+      }
       toast.success("Account created", {
         description: "Check your email to complete set up",
       });

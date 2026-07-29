@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
@@ -116,6 +117,7 @@ export function ConsumptionChart({
   onRangeChange,
   title = "Consumption",
 }: ConsumptionChartProps) {
+  const posthog = usePostHog();
   const breakdown = React.useMemo(
     () => consumption?.breakdown ?? [],
     [consumption],
@@ -137,6 +139,13 @@ export function ConsumptionChart({
 
   const handleRangeChange = (next: string) => {
     if (!next || next === range) return;
+    if (posthog) {
+      posthog.capture("consumption_range_changed", {
+        range: next,
+        scope: consumption?.scope,
+        scope_id: consumption?.id,
+      });
+    }
     onRangeChange(next as Range);
   };
 

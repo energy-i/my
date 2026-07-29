@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -34,6 +35,7 @@ const formSchema = z.object({
 const CreateUserForm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,6 +47,9 @@ const CreateUserForm = () => {
   const mutation = useMutation({
     mutationFn: createUser,
     onSuccess: async (_user, variables) => {
+      if (posthog) {
+        posthog.capture("user_invited");
+      }
       toast.success("Invite sent", {
         description: `An invitation has been sent to ${variables.email}.`,
       });

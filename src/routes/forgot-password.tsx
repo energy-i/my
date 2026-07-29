@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { InfoIcon, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -22,6 +23,7 @@ function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const posthog = usePostHog();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -39,6 +41,9 @@ function ForgotPasswordPage() {
     if (error) {
       setError(error.message || "An error occurred");
     } else {
+      if (posthog) {
+        posthog.capture("password_reset_requested");
+      }
       setSuccess(true);
     }
 

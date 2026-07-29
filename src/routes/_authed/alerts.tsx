@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { InfoIcon, LightbulbIcon, TriangleAlertIcon } from "lucide-react";
@@ -57,6 +58,7 @@ export const Route = createFileRoute("/_authed/alerts")({
 function AlertsPage() {
   const navigate = useNavigate({ from: "/alerts" });
   const { view, type = [], page = 1 } = Route.useSearch();
+  const posthog = usePostHog();
 
   const { data } = useQuery({
     queryKey: queryKeys.alerts({
@@ -96,6 +98,12 @@ function AlertsPage() {
     const next = values.filter((v): v is AlertType =>
       (ALERT_TYPES as readonly string[]).includes(v),
     );
+    if (posthog) {
+      posthog.capture("alerts_filter_changed", {
+        filter_types: next,
+        view,
+      });
+    }
     navigate({
       search: (prev) => ({
         ...prev,

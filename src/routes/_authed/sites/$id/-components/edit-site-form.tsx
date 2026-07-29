@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Controller, useForm } from "react-hook-form";
@@ -38,6 +39,7 @@ type ParsedValues = z.output<typeof formSchema>;
 const EditSiteForm = ({ site }: { site: Site }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
   const form = useForm<FormValues, unknown, ParsedValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -54,6 +56,12 @@ const EditSiteForm = ({ site }: { site: Site }) => {
   const mutation = useMutation({
     mutationFn: (data: SiteInput) => updateSite(site.id, data),
     onSuccess: async () => {
+      if (posthog) {
+        posthog.capture("site_edited", {
+          site_id: site.id,
+          site_name: site.name,
+        });
+      }
       await queryClient.invalidateQueries({ queryKey: queryKeys.sites });
       await queryClient.invalidateQueries({
         queryKey: queryKeys.site(site.id),

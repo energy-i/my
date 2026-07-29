@@ -1,4 +1,6 @@
+import { usePostHog } from "@posthog/react";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -30,6 +32,17 @@ export const Route = createFileRoute("/_authed")({
 
 function AuthedLayout() {
   const { user } = Route.useRouteContext();
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    if (posthog && user) {
+      posthog.identify(user.id, {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      });
+    }
+  }, [posthog, user]);
 
   return (
     <SidebarProvider>
