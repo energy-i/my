@@ -3,6 +3,7 @@ import type {
   Area,
   Consumption,
   ConsumptionInterval,
+  OfficeHoursEntry,
   OrganisationWithSites,
   OrganisationWithUsers,
   PaginatedAlerts,
@@ -10,6 +11,7 @@ import type {
   PaginatedSites,
   Site,
   SiteAlertWithSite,
+  Tariff,
   User,
   UserRole,
   UserWithOrganisation,
@@ -273,4 +275,34 @@ export async function patchAlert(
     },
   );
   return alert;
+}
+
+export async function getSiteTariff(siteId: string): Promise<Tariff | null> {
+  try {
+    const { tariff } = await apiFetch<{ tariff: Tariff }>(
+      `/sites/${siteId}/tariff`,
+    );
+    return tariff;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export async function getSiteOfficeHours(
+  siteId: string,
+): Promise<OfficeHoursEntry[]> {
+  try {
+    const { officeHours } = await apiFetch<{ officeHours: OfficeHoursEntry[] }>(
+      `/sites/${siteId}/office-hours`,
+    );
+    return officeHours;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 }

@@ -28,6 +28,8 @@ import {
   getSiteAlerts,
   getSiteAreas,
   getSiteConsumption,
+  getSiteOfficeHours,
+  getSiteTariff,
 } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import type { Site } from "@/lib/types";
@@ -259,14 +261,22 @@ function AlertsTab({ siteId }: { siteId: string }) {
   );
 }
 
+const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 function DetailsTab({ site }: { site: Site }) {
   const numberFormatter = new Intl.NumberFormat();
   const coordFormatter = new Intl.NumberFormat(undefined, {
     maximumFractionDigits: 5,
   });
-  const dateFormatter = new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
+
+  const { data: tariff } = useQuery({
+    queryKey: queryKeys.siteTariff(site.id),
+    queryFn: () => getSiteTariff(site.id),
+  });
+
+  const { data: officeHours } = useQuery({
+    queryKey: queryKeys.siteOfficeHours(site.id),
+    queryFn: () => getSiteOfficeHours(site.id),
   });
 
   const address = [site.addressLine1, site.city, site.postcode]
@@ -276,6 +286,10 @@ function DetailsTab({ site }: { site: Site }) {
     site.latitude !== null && site.longitude !== null
       ? `${coordFormatter.format(site.latitude)}, ${coordFormatter.format(site.longitude)}`
       : null;
+
+  const rateFormatter = new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 2,
+  });
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -314,29 +328,63 @@ function DetailsTab({ site }: { site: Site }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Metering</CardTitle>
+          <CardTitle>Tariff</CardTitle>
         </CardHeader>
         <CardContent>
-          <DetailItem label="Meter type" value={site.meterType} />
-          <DetailItem label="Comms vendor" value={site.commsVendor} />
-          <DetailItem label="Comms ID" value={site.commsId} />
+          {tariff ? (
+            <>
+              <DetailItem label="Name" value={tariff.name} />
+              <DetailItem label="Provider" value={tariff.provider} />
+              <DetailItem
+                label="Unit rate (p/kWh)"
+                value={
+                  tariff.unitRate != null && !Number.isNaN(Number(tariff.unitRate))
+                    ? rateFormatter.format(Number(tariff.unitRate))
+                    : null
+                }
+              />
+              <DetailItem
+                label="Standing charge (p/day)"
+                value={
+                  tariff.standingCharge != null && !Number.isNaN(Number(tariff.standingCharge))
+                    ? rateFormatter.format(Number(tariff.standingCharge))
+                    : null
+                }
+              />
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">No tariff assigned</p>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>System</CardTitle>
+          <CardTitle>Office hours</CardTitle>
         </CardHeader>
         <CardContent>
-          <DetailItem
-            label="Created"
-            value={dateFormatter.format(new Date(site.createdAt))}
-          />
-          <DetailItem
-            label="Last updated"
-            value={dateFormatter.format(new Date(site.updatedAt))}
-          />
-          <DetailItem label="Site ID" value={site.id} mono />
+          {officeHours && officeHours.length > 0 ? (
+            <dl>
+              {DAY_NAMES.map((name, i) => {
+                const entry = officeHours.find((e) => e.dayOfWeek === i);
+                return (
+                  <div
+                    key={i}
+                    className="grid grid-cols-3 gap-2 py-1.5 text-sm not-first:border-t not-first:border-border/60 not-first:pt-3 not-first:mt-1.5"
+                  >
+                    <dt className="text-muted-foreground">{name}</dt>
+                    <dd className="col-span-2">
+                      {entry
+                        ? `${entry.openTime} – ${entry.closeTime}`
+                        : <span className="text-muted-foreground italic">Closed</span>}
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">Not configured</p>
+          )}
         </CardContent>
       </Card>
     </div>

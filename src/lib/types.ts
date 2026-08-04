@@ -99,6 +99,24 @@ export type Consumption = {
 
 export type AlertType = "ALERT" | "OPPORTUNITY" | "INSIGHT";
 
+export type OfficeHoursEntry = {
+  id: string;
+  dayOfWeek: number;
+  openTime: string;
+  closeTime: string;
+  siteId: string;
+};
+
+export type Tariff = {
+  id: string;
+  name: string;
+  provider: string | null;
+  unitRate: number | string | null;
+  standingCharge: number | string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type SiteAlert = {
   id: string;
   title: string;
