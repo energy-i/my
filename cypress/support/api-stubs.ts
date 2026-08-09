@@ -107,8 +107,7 @@ export function installApiStubs(apiBaseUrl: string) {
 
   type Method = "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
   type Handler =
-    | Parameters<typeof cy.intercept>[1]
-    | Parameters<typeof cy.intercept>[2];
+    Parameters<typeof cy.intercept>[1] | Parameters<typeof cy.intercept>[2];
 
   function stub(
     method: Method | null,
