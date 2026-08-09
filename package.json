@@ -6,6 +6,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "format": "prettier --write .",
     "generate:routes": "tsr generate",
     "lint": "eslint .",
     "preview": "vite preview",

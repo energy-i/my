@@ -11,10 +11,7 @@
 
 Cypress.Commands.add(
   "login",
-  (
-    email = "admin@energycorp.com",
-    password = "password",
-  ) => {
+  (email = "admin@energycorp.com", password = "password") => {
     cy.session([email, password], () => {
       cy.visit("/sign-in");
       cy.get("#email").type(email);

@@ -261,7 +261,15 @@ function AlertsTab({ siteId }: { siteId: string }) {
   );
 }
 
-const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_NAMES = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 function DetailsTab({ site }: { site: Site }) {
   const numberFormatter = new Intl.NumberFormat();
@@ -338,7 +346,8 @@ function DetailsTab({ site }: { site: Site }) {
               <DetailItem
                 label="Unit rate (p/kWh)"
                 value={
-                  tariff.unitRate != null && !Number.isNaN(Number(tariff.unitRate))
+                  tariff.unitRate != null &&
+                  !Number.isNaN(Number(tariff.unitRate))
                     ? rateFormatter.format(Number(tariff.unitRate))
                     : null
                 }
@@ -346,14 +355,17 @@ function DetailsTab({ site }: { site: Site }) {
               <DetailItem
                 label="Standing charge (p/day)"
                 value={
-                  tariff.standingCharge != null && !Number.isNaN(Number(tariff.standingCharge))
+                  tariff.standingCharge != null &&
+                  !Number.isNaN(Number(tariff.standingCharge))
                     ? rateFormatter.format(Number(tariff.standingCharge))
                     : null
                 }
               />
             </>
           ) : (
-            <p className="text-sm text-muted-foreground italic">No tariff assigned</p>
+            <p className="text-sm text-muted-foreground italic">
+              No tariff assigned
+            </p>
           )}
         </CardContent>
       </Card>
@@ -374,16 +386,22 @@ function DetailsTab({ site }: { site: Site }) {
                   >
                     <dt className="text-muted-foreground">{name}</dt>
                     <dd className="col-span-2">
-                      {entry
-                        ? `${entry.openTime} – ${entry.closeTime}`
-                        : <span className="text-muted-foreground italic">Closed</span>}
+                      {entry ? (
+                        `${entry.openTime} – ${entry.closeTime}`
+                      ) : (
+                        <span className="text-muted-foreground italic">
+                          Closed
+                        </span>
+                      )}
                     </dd>
                   </div>
                 );
               })}
             </dl>
           ) : (
-            <p className="text-sm text-muted-foreground italic">Not configured</p>
+            <p className="text-sm text-muted-foreground italic">
+              Not configured
+            </p>
           )}
         </CardContent>
       </Card>
