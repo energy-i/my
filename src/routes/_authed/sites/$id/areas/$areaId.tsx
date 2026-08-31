@@ -1,13 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { InfoIcon } from "lucide-react";
 import * as React from "react";
 
 import {
   computeWindow,
   ConsumptionChart,
+  parseRangeSearch,
   type Range,
-  useDefaultRange,
+  rangeSearchSchema,
+  toRangeSearch,
 } from "@/components/consumption-chart";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -23,6 +25,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type { ConsumptionBreakdownItem } from "@/lib/types";
 
 export const Route = createFileRoute("/_authed/sites/$id/areas/$areaId")({
+  validateSearch: (search) => rangeSearchSchema.parse(search),
   loader: async ({ context, params }) => {
     // The parent site layout has already resolved the site. Ensuring the
     // site's areas here lets the component look up the area name from the
@@ -40,9 +43,13 @@ export const Route = createFileRoute("/_authed/sites/$id/areas/$areaId")({
 
 function AreaDetailPage() {
   const { id: siteId, areaId } = Route.useParams();
-  const defaultRange = useDefaultRange();
-  const [userRange, setUserRange] = React.useState<Range | null>(null);
-  const range: Range = userRange ?? defaultRange;
+  const navigate = useNavigate({ from: "/sites/$id/areas/$areaId" });
+  const search = Route.useSearch();
+  const range = React.useMemo(() => parseRangeSearch(search), [search]);
+
+  const setRange = (next: Range) => {
+    navigate({ search: () => toRangeSearch(next) });
+  };
 
   const { data: areas } = useQuery({
     queryKey: queryKeys.siteAreas(siteId),
@@ -51,12 +58,8 @@ function AreaDetailPage() {
   const area = areas?.find((a) => a.id === areaId);
 
   const consumptionQuery = useQuery({
-    queryKey: queryKeys.areaConsumption(areaId, range),
-    queryFn: () =>
-      getAreaConsumption(areaId, {
-        ...computeWindow(range),
-        interval: "day",
-      }),
+    queryKey: queryKeys.areaConsumption(areaId, toRangeSearch(range)),
+    queryFn: () => getAreaConsumption(areaId, computeWindow(range)),
     placeholderData: (prev) => prev,
   });
 
@@ -72,7 +75,7 @@ function AreaDetailPage() {
         consumption={consumptionQuery.data}
         isFetching={consumptionQuery.isFetching}
         range={range}
-        onRangeChange={setUserRange}
+        onRangeChange={setRange}
       />
 
       <section>

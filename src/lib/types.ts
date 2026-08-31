@@ -73,7 +73,7 @@ export type OrganisationWithSites = Organisation & { sites: Site[] };
 export type OrganisationWithUsers = Organisation & { users: User[] };
 
 export type ConsumptionScope = "site" | "area" | "appliance";
-export type ConsumptionInterval = "hour" | "day" | "week" | "month";
+export type ConsumptionInterval = "halfHour" | "hour" | "day" | "month";
 
 export type ConsumptionPoint = {
   timestamp: string;

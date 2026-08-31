@@ -9,9 +9,11 @@ import { AlertsList } from "@/components/alerts-list";
 import {
   computeWindow,
   ConsumptionChart,
+  formatRange,
+  parseRangeSearch,
   type Range,
-  RANGE_LABEL,
-  useDefaultRange,
+  rangeSearchSchema,
+  toRangeSearch,
 } from "@/components/consumption-chart";
 import { TablePagination } from "@/components/table-pagination";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -45,6 +47,7 @@ const searchSchema = z.object({
   // Only meaningful when `tab === "alerts"`; carried through router state so
   // pagination survives reloads and back/forward navigation.
   page: z.coerce.number().int().min(1).catch(1).optional(),
+  ...rangeSearchSchema.shape,
 });
 
 export const Route = createFileRoute("/_authed/sites/$id/")({
@@ -100,17 +103,17 @@ function SiteDetailPage() {
 }
 
 function ConsumptionTab({ siteId }: { siteId: string }) {
-  const defaultRange = useDefaultRange();
-  const [userRange, setUserRange] = React.useState<Range | null>(null);
-  const range: Range = userRange ?? defaultRange;
+  const navigate = useNavigate({ from: "/sites/$id" });
+  const search = Route.useSearch();
+  const range = React.useMemo(() => parseRangeSearch(search), [search]);
+
+  const setRange = (next: Range) => {
+    navigate({ search: (prev) => ({ ...prev, ...toRangeSearch(next) }) });
+  };
 
   const consumptionQuery = useQuery({
-    queryKey: queryKeys.siteConsumption(siteId, range),
-    queryFn: () =>
-      getSiteConsumption(siteId, {
-        ...computeWindow(range),
-        interval: "day",
-      }),
+    queryKey: queryKeys.siteConsumption(siteId, toRangeSearch(range)),
+    queryFn: () => getSiteConsumption(siteId, computeWindow(range)),
     placeholderData: (prev) => prev,
   });
 
@@ -137,7 +140,7 @@ function ConsumptionTab({ siteId }: { siteId: string }) {
         consumption={consumptionQuery.data}
         isFetching={consumptionQuery.isFetching}
         range={range}
-        onRangeChange={setUserRange}
+        onRangeChange={setRange}
       />
 
       <section>
@@ -195,7 +198,7 @@ function ConsumptionTab({ siteId }: { siteId: string }) {
                             </span>
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {RANGE_LABEL[range]}
+                            {formatRange(range)}
                           </p>
                         </>
                       ) : (

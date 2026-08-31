@@ -1,38 +1,35 @@
 import { usePostHog } from "@posthog/react";
+import dayjs from "dayjs";
 import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import * as z from "zod";
 
+import {
+  type DateRange,
+  DateRangePicker,
+  formatDateRange,
+} from "@/components/date-range-picker";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useIsMobile } from "@/hooks/use-mobile";
-import type { Consumption, ConsumptionBreakdownItem } from "@/lib/types";
+import type {
+  Consumption,
+  ConsumptionBreakdownItem,
+  ConsumptionInterval,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export type Range = "7d" | "30d" | "90d";
+export type Range = { from: Date; to: Date };
 
-export const RANGE_DAYS: Record<Range, number> = {
-  "7d": 7,
-  "30d": 30,
-  "90d": 90,
-};
+/** Widest range the API will accept, mirrored from `consumptionQuerySchema`. */
+export const MAX_RANGE_DAYS = 366;
 
-export const RANGE_LABEL: Record<Range, string> = {
-  "7d": "Last 7 days",
-  "30d": "Last 30 days",
-  "90d": "Last 3 months",
-};
+const DEFAULT_RANGE_DAYS = 30;
+
+const SEARCH_DATE_FORMAT = "YYYY-MM-DD";
 
 // Cycle through the shadcn chart palette defined in globals.css.
 const CHART_COLORS = [
@@ -43,11 +40,71 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ] as const;
 
-export function computeWindow(range: Range): { from: string; to: string } {
-  const to = new Date();
-  const from = new Date(to);
-  from.setDate(from.getDate() - RANGE_DAYS[range]);
-  return { from: from.toISOString(), to: to.toISOString() };
+export function defaultRange(): Range {
+  const to = dayjs();
+  return {
+    from: to.subtract(DEFAULT_RANGE_DAYS, "day").toDate(),
+    to: to.toDate(),
+  };
+}
+
+export function rangeDays(range: Range): number {
+  return dayjs(range.to).diff(range.from, "day", true);
+}
+
+/** Pick a bucket size that keeps the series to a readable number of points. */
+export function deriveInterval(range: Range): ConsumptionInterval {
+  const days = rangeDays(range);
+  if (days <= 2) return "halfHour";
+  if (days <= 14) return "hour";
+  if (days <= 180) return "day";
+  return "month";
+}
+
+export function computeWindow(range: Range): {
+  from: string;
+  to: string;
+  interval: ConsumptionInterval;
+} {
+  return {
+    from: range.from.toISOString(),
+    to: range.to.toISOString(),
+    interval: deriveInterval(range),
+  };
+}
+
+export function formatRange(range: Range): string {
+  return formatDateRange(range);
+}
+
+/** `from`/`to` are held in the URL as local `yyyy-mm-dd` days. */
+export const rangeSearchSchema = z.object({
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+});
+
+export type RangeSearch = z.infer<typeof rangeSearchSchema>;
+
+export function toRangeSearch(range: Range): Required<RangeSearch> {
+  return {
+    from: dayjs(range.from).format(SEARCH_DATE_FORMAT),
+    to: dayjs(range.to).format(SEARCH_DATE_FORMAT),
+  };
+}
+
+/** Falls back to the default window if the URL holds a missing or invalid range. */
+export function parseRangeSearch(search: RangeSearch): Range {
+  if (!search.from || !search.to) return defaultRange();
+  // Zod has already enforced `YYYY-MM-DD`; dayjs parses that as a local day.
+  const from = dayjs(search.from).startOf("day");
+  const to = dayjs(search.to).endOf("day");
+  if (!from.isValid() || !to.isValid()) return defaultRange();
+
+  const range = { from: from.toDate(), to: to.toDate() };
+  if (!from.isBefore(to) || rangeDays(range) > MAX_RANGE_DAYS) {
+    return defaultRange();
+  }
+  return range;
 }
 
 // Prefix keys so they never collide with the reserved `timestamp` field even
@@ -95,13 +152,6 @@ function buildChartConfig(breakdown: ConsumptionBreakdownItem[]): ChartConfig {
   return config;
 }
 
-// Default range: 7d on mobile, 90d elsewhere. Returned as a derived value so
-// callers don't need to sync state with useEffect.
-export function useDefaultRange(): Range {
-  const isMobile = useIsMobile();
-  return isMobile ? "7d" : "90d";
-}
-
 type ConsumptionChartProps = {
   consumption: Consumption | undefined;
   isFetching: boolean;
@@ -136,17 +186,28 @@ export function ConsumptionChart({
   const formattedTotal = total.toLocaleString(undefined, {
     maximumFractionDigits: 1,
   });
+  const interval = deriveInterval(range);
+  const showTime = interval === "halfHour" || interval === "hour";
 
-  const handleRangeChange = (next: string) => {
-    if (!next || next === range) return;
+  // Keep the picker inside the window the API will accept.
+  const earliest = React.useMemo(
+    () => dayjs().subtract(MAX_RANGE_DAYS, "day").toDate(),
+    [],
+  );
+
+  const handleRangeChange = (next: DateRange) => {
+    if (!next.from || !next.to) return;
+    const range = { from: next.from, to: next.to };
     if (posthog) {
       posthog.capture("consumption_range_changed", {
-        range: next,
+        from: range.from.toISOString(),
+        to: range.to.toISOString(),
+        days: Math.round(rangeDays(range)),
         scope: consumption?.scope,
         scope_id: consumption?.id,
       });
     }
-    onRangeChange(next as Range);
+    onRangeChange(range);
   };
 
   return (
@@ -156,46 +217,19 @@ export function ConsumptionChart({
           <h2 className="text-lg font-semibold">{title}</h2>
           <p className="text-sm text-muted-foreground">
             <span className="hidden @[540px]/chart:inline">
-              {formattedTotal} {unit} total · {RANGE_LABEL[range]}
+              {formattedTotal} {unit} total · {formatRange(range)}
             </span>
             <span className="@[540px]/chart:hidden">
               {formattedTotal} {unit}
             </span>
           </p>
         </div>
-        <div>
-          <ToggleGroup
-            type="single"
-            value={range}
-            onValueChange={handleRangeChange}
-            variant="outline"
-            className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/chart:flex"
-          >
-            <ToggleGroupItem value="90d">Last 3 months</ToggleGroupItem>
-            <ToggleGroupItem value="30d">Last 30 days</ToggleGroupItem>
-            <ToggleGroupItem value="7d">Last 7 days</ToggleGroupItem>
-          </ToggleGroup>
-          <Select value={range} onValueChange={handleRangeChange}>
-            <SelectTrigger
-              className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/chart:hidden"
-              size="sm"
-              aria-label="Select a range"
-            >
-              <SelectValue placeholder="Last 3 months" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="90d" className="rounded-lg">
-                Last 3 months
-              </SelectItem>
-              <SelectItem value="30d" className="rounded-lg">
-                Last 30 days
-              </SelectItem>
-              <SelectItem value="7d" className="rounded-lg">
-                Last 7 days
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <DateRangePicker
+          value={range}
+          onChange={handleRangeChange}
+          minDate={earliest}
+          ariaLabel="Select a consumption date range"
+        />
       </div>
       <ChartContainer
         config={chartConfig}
@@ -239,10 +273,7 @@ export function ConsumptionChart({
             tickMargin={8}
             minTickGap={32}
             tickFormatter={(value) =>
-              new Date(value).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })
+              dayjs(value).format(showTime ? "MMM D, h:mm A" : "MMM D")
             }
           />
           <YAxis
@@ -259,11 +290,9 @@ export function ConsumptionChart({
             content={
               <ChartTooltipContent
                 labelFormatter={(value) =>
-                  new Date(value as string).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
+                  dayjs(value as string).format(
+                    showTime ? "MMM D, YYYY h:mm A" : "MMM D, YYYY",
+                  )
                 }
                 indicator="dot"
               />
