@@ -77,7 +77,7 @@ export type ConsumptionInterval = "halfHour" | "hour" | "day" | "month";
 
 export type ConsumptionPoint = {
   timestamp: string;
-  value: number;
+  value: number | null;
 };
 
 export type ConsumptionBreakdownItem = {

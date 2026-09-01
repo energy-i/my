@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { getAreaConsumption, getSiteAreas } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
-import type { ConsumptionBreakdownItem } from "@/lib/types";
+import type { ConsumptionBreakdownItem, ConsumptionPoint } from "@/lib/types";
 
 export const Route = createFileRoute("/_authed/sites/$id/areas/$areaId")({
   validateSearch: (search) => rangeSearchSchema.parse(search),
@@ -105,9 +105,13 @@ function AppliancesTable({
   const rows = React.useMemo(() => {
     return appliances
       .map((item) => {
-        const points = item.series.length;
-        const dailyAverage = points > 0 ? item.total / points : 0;
-        const peak = item.series.reduce<{
+        const readings = item.series.filter(
+          (point): point is ConsumptionPoint & { value: number } =>
+            point.value !== null,
+        );
+        const dailyAverage =
+          readings.length > 0 ? item.total / readings.length : 0;
+        const peak = readings.reduce<{
           timestamp: string;
           value: number;
         } | null>((best, point) => {

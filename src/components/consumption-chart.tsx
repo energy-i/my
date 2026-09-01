@@ -1,5 +1,6 @@
 import { usePostHog } from "@posthog/react";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import * as z from "zod";
@@ -21,6 +22,8 @@ import type {
   ConsumptionInterval,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+dayjs.extend(utc);
 
 export type Range = { from: Date; to: Date };
 
@@ -67,8 +70,8 @@ export function computeWindow(range: Range): {
   interval: ConsumptionInterval;
 } {
   return {
-    from: range.from.toISOString(),
-    to: range.to.toISOString(),
+    from: dayjs(range.from).format(SEARCH_DATE_FORMAT),
+    to: dayjs(range.to).format(SEARCH_DATE_FORMAT),
     interval: deriveInterval(range),
   };
 }
@@ -111,7 +114,7 @@ export function parseRangeSearch(search: RangeSearch): Range {
 // if a breakdown item is named "timestamp".
 const seriesKey = (id: string) => `s_${id}`;
 
-type ChartRow = { timestamp: string } & Record<string, number | string>;
+type ChartRow = { timestamp: string } & Record<string, number | string | null>;
 
 function buildChartData(breakdown: ConsumptionBreakdownItem[]): ChartRow[] {
   const byTimestamp = new Map<string, ChartRow>();
@@ -128,16 +131,9 @@ function buildChartData(breakdown: ConsumptionBreakdownItem[]): ChartRow[] {
     }
   }
 
-  // Fill in missing values so stacked areas render continuously.
   const rows = Array.from(byTimestamp.values()).sort((a, b) =>
     a.timestamp.localeCompare(b.timestamp),
   );
-  for (const row of rows) {
-    for (const item of breakdown) {
-      const key = seriesKey(item.id);
-      if (row[key] === undefined) row[key] = 0;
-    }
-  }
   return rows;
 }
 
@@ -273,7 +269,7 @@ export function ConsumptionChart({
             tickMargin={8}
             minTickGap={32}
             tickFormatter={(value) =>
-              dayjs(value).format(showTime ? "MMM D, h:mm A" : "MMM D")
+              dayjs.utc(value).format(showTime ? "MMM D, h:mm A" : "MMM D")
             }
           />
           <YAxis
@@ -290,7 +286,7 @@ export function ConsumptionChart({
             content={
               <ChartTooltipContent
                 labelFormatter={(value) =>
-                  dayjs(value as string).format(
+                  dayjs.utc(value as string).format(
                     showTime ? "MMM D, YYYY h:mm A" : "MMM D, YYYY",
                   )
                 }
