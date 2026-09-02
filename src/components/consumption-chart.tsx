@@ -30,8 +30,6 @@ export type Range = { from: Date; to: Date };
 /** Widest range the API will accept, mirrored from `consumptionQuerySchema`. */
 export const MAX_RANGE_DAYS = 366;
 
-const DEFAULT_RANGE_DAYS = 30;
-
 const SEARCH_DATE_FORMAT = "YYYY-MM-DD";
 
 // Cycle through the shadcn chart palette defined in globals.css.
@@ -44,10 +42,10 @@ const CHART_COLORS = [
 ] as const;
 
 export function defaultRange(): Range {
-  const to = dayjs();
+  const today = dayjs();
   return {
-    from: to.subtract(DEFAULT_RANGE_DAYS, "day").toDate(),
-    to: to.toDate(),
+    from: today.startOf("day").toDate(),
+    to: today.endOf("day").toDate(),
   };
 }
 
@@ -286,9 +284,9 @@ export function ConsumptionChart({
             content={
               <ChartTooltipContent
                 labelFormatter={(value) =>
-                  dayjs.utc(value as string).format(
-                    showTime ? "MMM D, YYYY h:mm A" : "MMM D, YYYY",
-                  )
+                  dayjs
+                    .utc(value as string)
+                    .format(showTime ? "MMM D, YYYY h:mm A" : "MMM D, YYYY")
                 }
                 indicator="dot"
               />

@@ -10,6 +10,7 @@ import {
 import type * as React from "react";
 
 import { AlertsList } from "@/components/alerts-list";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -195,9 +196,11 @@ function DashboardPage() {
               {priorityAlerts.length > 0 ? (
                 <AlertsList alerts={priorityAlerts} />
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  No active alerts. Nothing needs your attention right now.
-                </p>
+                <Alert>
+                  <AlertDescription>
+                    No active alerts. Nothing needs your attention right now.
+                  </AlertDescription>
+                </Alert>
               )}
             </section>
 
