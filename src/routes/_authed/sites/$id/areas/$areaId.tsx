@@ -60,6 +60,7 @@ function AreaDetailPage() {
   const consumptionQuery = useQuery({
     queryKey: queryKeys.areaConsumption(areaId, toRangeSearch(range)),
     queryFn: () => getAreaConsumption(areaId, computeWindow(range)),
+    refetchInterval: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
 

@@ -171,15 +171,6 @@ export function ConsumptionChart({
     [breakdown],
   );
   const chartData = React.useMemo(() => buildChartData(breakdown), [breakdown]);
-  const total = React.useMemo(
-    () => breakdown.reduce((sum, item) => sum + item.total, 0),
-    [breakdown],
-  );
-
-  const unit = consumption?.unit || "kWh";
-  const formattedTotal = total.toLocaleString(undefined, {
-    maximumFractionDigits: 1,
-  });
   const interval = deriveInterval(range);
   const showTime = interval === "halfHour" || interval === "hour";
 

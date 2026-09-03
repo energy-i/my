@@ -211,8 +211,7 @@ function DashboardPage() {
                 ) : (
                   <Alert>
                     <AlertDescription>
-                      No active alerts. Nothing needs your attention right
-                      now.
+                      No active alerts. Nothing needs your attention right now.
                     </AlertDescription>
                   </Alert>
                 )
@@ -220,9 +219,9 @@ function DashboardPage() {
                 <Alert>
                   <LockIcon />
                   <AlertDescription>
-                    Alerts is an Optimise-tier feature. Upgrade any site to
-                    the Optimise tier to start receiving alerts,
-                    opportunities, and insights.
+                    Alerts is an Optimise-tier feature. Upgrade any site to the
+                    Optimise tier to start receiving alerts, opportunities, and
+                    insights.
                   </AlertDescription>
                 </Alert>
               )}

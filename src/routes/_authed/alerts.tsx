@@ -1,11 +1,12 @@
 import { usePostHog } from "@posthog/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  createFileRoute,
-  Link,
-  useNavigate,
-} from "@tanstack/react-router";
-import { InfoIcon, LightbulbIcon, LockIcon, TriangleAlertIcon } from "lucide-react";
+  InfoIcon,
+  LightbulbIcon,
+  LockIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 import type * as React from "react";
 import * as z from "zod";
 
@@ -161,11 +162,7 @@ function AlertsPage() {
                 aria-label="Filter by type"
               >
                 {TYPE_FILTERS.map(({ value, label, Icon }) => (
-                  <ToggleGroupItem
-                    key={value}
-                    value={value}
-                    aria-label={label}
-                  >
+                  <ToggleGroupItem key={value} value={value} aria-label={label}>
                     <Icon className="size-3.5" />
                     {label}
                   </ToggleGroupItem>
@@ -215,8 +212,8 @@ function AlertsPage() {
             <LockIcon />
             <AlertTitle>Alerts is an Optimise-tier feature</AlertTitle>
             <AlertDescription>
-              Upgrade any site to the Optimise tier to start receiving
-              alerts, opportunities, and insights across your organisation.
+              Upgrade any site to the Optimise tier to start receiving alerts,
+              opportunities, and insights across your organisation.
             </AlertDescription>
           </Alert>
         )}
@@ -224,4 +221,3 @@ function AlertsPage() {
     </>
   );
 }
-

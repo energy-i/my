@@ -119,6 +119,7 @@ function ConsumptionTab({ siteId }: { siteId: string }) {
   const consumptionQuery = useQuery({
     queryKey: queryKeys.siteConsumption(siteId, toRangeSearch(range)),
     queryFn: () => getSiteConsumption(siteId, computeWindow(range)),
+    refetchInterval: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
 
