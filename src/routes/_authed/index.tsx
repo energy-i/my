@@ -4,6 +4,7 @@ import {
   BellIcon,
   BuildingIcon,
   ListIcon,
+  LockIcon,
   RulerIcon,
   ZapIcon,
 } from "lucide-react";
@@ -74,6 +75,7 @@ function DashboardPage() {
   });
 
   const hasSites = !!organisation && organisation.sites.length > 0;
+  const hasAlertsAccess = !!organisation?.hasAlertsAccess;
 
   const { data: alertsData } = useQuery({
     queryKey: queryKeys.alerts({
@@ -83,8 +85,9 @@ function DashboardPage() {
       type: [],
     }),
     queryFn: () => getAlerts({ pageSize: DASHBOARD_ALERTS_FETCH_SIZE }),
-    // No point querying alerts before we know the org has been onboarded.
-    enabled: hasSites,
+    // No point querying alerts before we know the org has been onboarded,
+    // or if the org is gated out of the alerts feature entirely.
+    enabled: hasSites && hasAlertsAccess,
   });
 
   const sites = organisation?.sites ?? [];
@@ -171,7 +174,16 @@ function DashboardPage() {
               />
               <StatCard
                 label="Active alerts"
-                value={numberFormatter.format(alerts.length)}
+                value={
+                  hasAlertsAccess ? (
+                    numberFormatter.format(alerts.length)
+                  ) : (
+                    <LockIcon
+                      className="size-5 text-muted-foreground"
+                      aria-label="Alerts locked"
+                    />
+                  )
+                }
                 Icon={BellIcon}
               />
             </div>
@@ -193,12 +205,24 @@ function DashboardPage() {
                   </Link>
                 </Button>
               </div>
-              {priorityAlerts.length > 0 ? (
-                <AlertsList alerts={priorityAlerts} />
+              {hasAlertsAccess ? (
+                priorityAlerts.length > 0 ? (
+                  <AlertsList alerts={priorityAlerts} />
+                ) : (
+                  <Alert>
+                    <AlertDescription>
+                      No active alerts. Nothing needs your attention right
+                      now.
+                    </AlertDescription>
+                  </Alert>
+                )
               ) : (
                 <Alert>
+                  <LockIcon />
                   <AlertDescription>
-                    No active alerts. Nothing needs your attention right now.
+                    Alerts is an Optimise-tier feature. Upgrade any site to
+                    the Optimise tier to start receiving alerts,
+                    opportunities, and insights.
                   </AlertDescription>
                 </Alert>
               )}
@@ -270,7 +294,7 @@ function StatCard({
   Icon,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   unit?: string;
   Icon: React.ComponentType<{ className?: string }>;
 }) {

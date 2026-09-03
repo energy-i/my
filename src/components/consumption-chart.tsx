@@ -207,9 +207,7 @@ export function ConsumptionChart({
   return (
     <div className="@container/chart flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold">{title}</h2>
-        </div>
+        <h2 className="text-lg font-semibold">{title}</h2>
         <DateRangePicker
           value={range}
           onChange={handleRangeChange}

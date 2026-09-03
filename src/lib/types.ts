@@ -9,6 +9,10 @@ export type Organisation = {
   address: string | null;
   createdAt: string;
   updatedAt: string;
+  // Server-computed: true when at least one site is on the OPTIMISE tier.
+  // Used to gate org-wide features (e.g. the Alerts nav item) without
+  // fetching every site.
+  hasAlertsAccess: boolean;
 };
 
 export type UserRole = "OWNER" | "ADMIN" | "USER";
@@ -40,6 +44,8 @@ export type UserWithOrganisation = User & { organisation: Organisation };
 
 export type MeterType = "SMETS2" | "SMETS1" | "LEGACY" | "SUB";
 
+export type SiteTier = "MONITOR" | "OPTIMISE";
+
 export type Site = {
   id: string;
   name: string;
@@ -56,7 +62,16 @@ export type Site = {
   updatedAt: string;
   organisationId: string;
   tariffId: string | null;
+  tier: SiteTier;
 };
+
+// Alerts (and opportunities/insights) are an OPTIMISE-tier feature; MONITOR
+// sites don't generate or expose them. The API is the source of truth (it
+// should 403/omit alert data for MONITOR sites) — this just mirrors that
+// rule for UI gating.
+export function siteHasAlertsAccess(site: Pick<Site, "tier">): boolean {
+  return site.tier === "OPTIMISE";
+}
 
 export type Area = {
   id: string;

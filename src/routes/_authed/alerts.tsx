@@ -1,7 +1,11 @@
 import { usePostHog } from "@posthog/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { InfoIcon, LightbulbIcon, TriangleAlertIcon } from "lucide-react";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+} from "@tanstack/react-router";
+import { InfoIcon, LightbulbIcon, LockIcon, TriangleAlertIcon } from "lucide-react";
 import type * as React from "react";
 import * as z from "zod";
 
@@ -56,6 +60,8 @@ export const Route = createFileRoute("/_authed/alerts")({
 });
 
 function AlertsPage() {
+  const { user } = Route.useRouteContext();
+  const hasAlertsAccess = user.organisation.hasAlertsAccess;
   const navigate = useNavigate({ from: "/alerts" });
   const { view, type = [], page = 1 } = Route.useSearch();
   const posthog = usePostHog();
@@ -75,6 +81,7 @@ function AlertsPage() {
         pageSize: PAGE_SIZE,
       }),
     placeholderData: keepPreviousData,
+    enabled: hasAlertsAccess,
   });
 
   const alerts = data?.alerts ?? [];
@@ -141,58 +148,80 @@ function AlertsPage() {
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <ToggleGroup
-            type="multiple"
-            variant="outline"
-            size="sm"
-            spacing={0}
-            value={type}
-            onValueChange={handleTypeChange}
-            aria-label="Filter by type"
-          >
-            {TYPE_FILTERS.map(({ value, label, Icon }) => (
-              <ToggleGroupItem key={value} value={value} aria-label={label}>
-                <Icon className="size-3.5" />
-                {label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+        {hasAlertsAccess ? (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <ToggleGroup
+                type="multiple"
+                variant="outline"
+                size="sm"
+                spacing={0}
+                value={type}
+                onValueChange={handleTypeChange}
+                aria-label="Filter by type"
+              >
+                {TYPE_FILTERS.map(({ value, label, Icon }) => (
+                  <ToggleGroupItem
+                    key={value}
+                    value={value}
+                    aria-label={label}
+                  >
+                    <Icon className="size-3.5" />
+                    {label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
 
-          <Tabs value={view} onValueChange={handleViewChange} className="w-fit">
-            <TabsList>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="snoozed">Snoozed</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+              <Tabs
+                value={view}
+                onValueChange={handleViewChange}
+                className="w-fit"
+              >
+                <TabsList>
+                  <TabsTrigger value="active">Active</TabsTrigger>
+                  <TabsTrigger value="snoozed">Snoozed</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
 
-        {alerts.length === 0 ? (
+            {alerts.length === 0 ? (
+              <Alert>
+                <InfoIcon />
+                <AlertTitle>
+                  No {view === "snoozed" ? "snoozed" : "active"}
+                  {hasFilter ? " matching" : ""} alerts
+                </AlertTitle>
+                <AlertDescription>
+                  {hasFilter
+                    ? "No alerts match the current type filter."
+                    : view === "snoozed"
+                      ? "You haven't snoozed any alerts."
+                      : "You have no active alerts, opportunities, or insights."}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <AlertsList alerts={alerts} />
+                <TablePagination
+                  page={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </>
+            )}
+          </>
+        ) : (
           <Alert>
-            <InfoIcon />
-            <AlertTitle>
-              No {view === "snoozed" ? "snoozed" : "active"}
-              {hasFilter ? " matching" : ""} alerts
-            </AlertTitle>
+            <LockIcon />
+            <AlertTitle>Alerts is an Optimise-tier feature</AlertTitle>
             <AlertDescription>
-              {hasFilter
-                ? "No alerts match the current type filter."
-                : view === "snoozed"
-                  ? "You haven't snoozed any alerts."
-                  : "You have no active alerts, opportunities, or insights."}
+              Upgrade any site to the Optimise tier to start receiving
+              alerts, opportunities, and insights across your organisation.
             </AlertDescription>
           </Alert>
-        ) : (
-          <>
-            <AlertsList alerts={alerts} />
-            <TablePagination
-              page={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </>
         )}
       </div>
     </>
   );
 }
+

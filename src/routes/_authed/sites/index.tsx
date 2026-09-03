@@ -6,6 +6,7 @@ import {
   ArrowUpIcon,
   InfoIcon,
   ListIcon,
+  LockIcon,
   MapIcon,
 } from "lucide-react";
 import * as React from "react";
@@ -252,7 +253,14 @@ function SitesPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-center tabular-nums">
-                        {numberFormatter.format(site._count.alerts)}
+                        {site.tier === "OPTIMISE" ? (
+                          numberFormatter.format(site._count.alerts)
+                        ) : (
+                          <LockIcon
+                            className="mx-auto size-3.5 text-muted-foreground"
+                            aria-label="Alerts locked"
+                          />
+                        )}
                       </TableCell>
                       <TableCell className="text-center tabular-nums">
                         {numberFormatter.format(site._count.areas)}

@@ -1,7 +1,7 @@
 import { usePostHog } from "@posthog/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ChevronRightIcon, InfoIcon } from "lucide-react";
+import { ChevronRightIcon, InfoIcon, LockIcon } from "lucide-react";
 import * as React from "react";
 import * as z from "zod";
 
@@ -35,6 +35,7 @@ import {
 } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import type { Site } from "@/lib/types";
+import { siteHasAlertsAccess } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const ALERTS_PAGE_SIZE = 25;
@@ -85,6 +86,8 @@ function SiteDetailPage() {
 
   if (!site) return null;
 
+  const hasAlertsAccess = siteHasAlertsAccess(site);
+
   return (
     <div className="flex flex-col gap-6">
       <Tabs value={tab} onValueChange={handleTabChange} className="w-fit">
@@ -96,7 +99,9 @@ function SiteDetailPage() {
       </Tabs>
 
       {tab === "consumption" ? <ConsumptionTab siteId={id} /> : null}
-      {tab === "alerts" ? <AlertsTab siteId={id} /> : null}
+      {tab === "alerts" ? (
+        <AlertsTab siteId={id} hasAlertsAccess={hasAlertsAccess} />
+      ) : null}
       {tab === "details" ? <DetailsTab site={site} /> : null}
     </div>
   );
@@ -220,7 +225,13 @@ function ConsumptionTab({ siteId }: { siteId: string }) {
   );
 }
 
-function AlertsTab({ siteId }: { siteId: string }) {
+function AlertsTab({
+  siteId,
+  hasAlertsAccess,
+}: {
+  siteId: string;
+  hasAlertsAccess: boolean;
+}) {
   const navigate = useNavigate({ from: "/sites/$id" });
   const { page = 1 } = Route.useSearch();
 
@@ -231,6 +242,7 @@ function AlertsTab({ siteId }: { siteId: string }) {
     }),
     queryFn: () => getSiteAlerts(siteId, { page, pageSize: ALERTS_PAGE_SIZE }),
     placeholderData: keepPreviousData,
+    enabled: hasAlertsAccess,
   });
 
   const alerts = data?.alerts ?? [];
@@ -239,6 +251,19 @@ function AlertsTab({ siteId }: { siteId: string }) {
 
   const handlePageChange = (next: number) =>
     navigate({ search: (prev) => ({ ...prev, page: next }) });
+
+  if (!hasAlertsAccess) {
+    return (
+      <Alert>
+        <LockIcon />
+        <AlertTitle>Alerts is an Optimise-tier feature</AlertTitle>
+        <AlertDescription>
+          Upgrade this site to the Optimise tier to start receiving alerts,
+          opportunities, and insights.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (alerts.length === 0) {
     return (
