@@ -5,10 +5,13 @@ import {
   ArrowUpDownIcon,
   ArrowUpIcon,
   InfoIcon,
+  ListIcon,
+  MapIcon,
 } from "lucide-react";
-import type * as React from "react";
+import * as React from "react";
 import * as z from "zod";
 
+import { SitesMap } from "@/components/sites-map";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Breadcrumb,
@@ -37,7 +40,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getSites } from "@/lib/api";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { getOrganisation, getSites } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 
 const PAGE_SIZE = 25;
@@ -71,6 +80,7 @@ export const Route = createFileRoute("/_authed/sites/")({
 });
 
 function SitesPage() {
+  const [view, setView] = React.useState<"table" | "map">("table");
   const {
     page = 1,
     sortBy = DEFAULT_SORT_BY,
@@ -87,6 +97,11 @@ function SitesPage() {
     }),
     queryFn: () => getSites({ page, pageSize: PAGE_SIZE, sortBy, sortDir }),
     placeholderData: keepPreviousData,
+  });
+  const { data: organisation } = useQuery({
+    queryKey: queryKeys.organisation,
+    queryFn: getOrganisation,
+    enabled: view === "map",
   });
 
   const sites = data?.sites ?? [];
@@ -139,95 +154,128 @@ function SitesPage() {
       <div className="flex-1 flex-col gap-4 p-4 pt-0 space-y-4">
         {sites.length > 0 ? (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <SortButton
-                      field="name"
-                      label="Site"
-                      currentSortBy={sortBy}
-                      currentSortDir={sortDir}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead>
-                    <SortButton
-                      field="city"
-                      label="Location"
-                      currentSortBy={sortBy}
-                      currentSortDir={sortDir}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead className="text-center">Active alerts</TableHead>
-                  <TableHead className="text-center">Areas</TableHead>
-                  <TableHead className="text-center">Appliances</TableHead>
-                  <TableHead className="text-center">
-                    <SortButton
-                      field="area"
-                      label="Area (m²)"
-                      align="end"
-                      currentSortBy={sortBy}
-                      currentSortDir={sortDir}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                  <TableHead className="text-center">
-                    <SortButton
-                      field="eac"
-                      label="EAC (kWh)"
-                      align="end"
-                      currentSortBy={sortBy}
-                      currentSortDir={sortDir}
-                      onSort={handleSort}
-                    />
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sites.map((site) => (
-                  <TableRow key={site.id}>
-                    <TableCell>
-                      <Link
-                        to="/sites/$id"
-                        params={{ id: site.id }}
-                        className="font-medium text-md hover:underline"
-                      >
-                        {site.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <div>{site.city}</div>
-                      <div className="text-muted-foreground text-xs">
-                        {site.addressLine1}
-                        {site.postcode && `, ${site.postcode}`}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {numberFormatter.format(site._count.alerts)}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {numberFormatter.format(site._count.areas)}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {numberFormatter.format(site._count.appliances)}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {site.area !== null
-                        ? numberFormatter.format(site.area)
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {site.eac !== null
-                        ? numberFormatter.format(site.eac)
-                        : "—"}
-                    </TableCell>
+            <div className="flex justify-end">
+              <ToggleGroup
+                type="single"
+                value={view}
+                onValueChange={(value) => {
+                  if (value === "table" || value === "map") setView(value);
+                }}
+                variant="outline"
+                spacing={0}
+                aria-label="Sites view"
+              >
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem value="table" aria-label="Table view">
+                      <ListIcon />
+                    </ToggleGroupItem>
+                  </TooltipTrigger>
+                  <TooltipContent>Table view</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem value="map" aria-label="Map view">
+                      <MapIcon />
+                    </ToggleGroupItem>
+                  </TooltipTrigger>
+                  <TooltipContent>Map view</TooltipContent>
+                </Tooltip>
+              </ToggleGroup>
+            </div>
+            {view === "map" ? (
+              <SitesMap sites={organisation?.sites ?? sites} />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <SortButton
+                        field="name"
+                        label="Site"
+                        currentSortBy={sortBy}
+                        currentSortDir={sortDir}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <SortButton
+                        field="city"
+                        label="Location"
+                        currentSortBy={sortBy}
+                        currentSortDir={sortDir}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="text-center">Active alerts</TableHead>
+                    <TableHead className="text-center">Areas</TableHead>
+                    <TableHead className="text-center">Appliances</TableHead>
+                    <TableHead className="text-center">
+                      <SortButton
+                        field="area"
+                        label="Area (m²)"
+                        align="end"
+                        currentSortBy={sortBy}
+                        currentSortDir={sortDir}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
+                    <TableHead className="text-center">
+                      <SortButton
+                        field="eac"
+                        label="EAC (kWh)"
+                        align="end"
+                        currentSortBy={sortBy}
+                        currentSortDir={sortDir}
+                        onSort={handleSort}
+                      />
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {totalPages > 1 ? (
+                </TableHeader>
+                <TableBody>
+                  {sites.map((site) => (
+                    <TableRow key={site.id}>
+                      <TableCell>
+                        <Link
+                          to="/sites/$id"
+                          params={{ id: site.id }}
+                          className="font-medium text-md hover:underline"
+                        >
+                          {site.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <div>{site.city}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {site.addressLine1}
+                          {site.postcode && `, ${site.postcode}`}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center tabular-nums">
+                        {numberFormatter.format(site._count.alerts)}
+                      </TableCell>
+                      <TableCell className="text-center tabular-nums">
+                        {numberFormatter.format(site._count.areas)}
+                      </TableCell>
+                      <TableCell className="text-center tabular-nums">
+                        {numberFormatter.format(site._count.appliances)}
+                      </TableCell>
+                      <TableCell className="text-center tabular-nums">
+                        {site.area !== null
+                          ? numberFormatter.format(site.area)
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-center tabular-nums">
+                        {site.eac !== null
+                          ? numberFormatter.format(site.eac)
+                          : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+            {view === "table" && totalPages > 1 ? (
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>

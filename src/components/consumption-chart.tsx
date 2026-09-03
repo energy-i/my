@@ -209,14 +209,6 @@ export function ConsumptionChart({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">{title}</h2>
-          <p className="text-sm text-muted-foreground">
-            <span className="hidden @[540px]/chart:inline">
-              {formattedTotal} {unit} total · {formatRange(range)}
-            </span>
-            <span className="@[540px]/chart:hidden">
-              {formattedTotal} {unit}
-            </span>
-          </p>
         </div>
         <DateRangePicker
           value={range}

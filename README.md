@@ -33,15 +33,6 @@ send CORS headers and allow cross-site cookies.
 
 3. Open [http://localhost:3000](http://localhost:3000).
 
-## Environment variables
-
-| Name                | Description                                            | Default                    |
-| ------------------- | ------------------------------------------------------ | -------------------------- |
-| `API_BASE_URL`      | Dev-server proxy target for `/api/*` (include `/v1`).  | `http://localhost:3001/v1` |
-| `VITE_API_BASE_URL` | Public API base URL used by the browser in production. | `/api` (dev proxy)         |
-| `VITE_SENTRY_DSN`   | Sentry DSN for the browser SDK.                        | —                          |
-| `SENTRY_AUTH_TOKEN` | Enables Sentry source-map upload at build time.        | —                          |
-
 ## Scripts
 
 - `npm run dev` — start the Vite dev server on port 3000.
