@@ -30,7 +30,7 @@ import {
   getSiteAlerts,
   getSiteAreas,
   getSiteConsumption,
-  getSiteOfficeHours,
+  getSiteOpeningHours,
   getSiteTariff,
 } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
@@ -285,9 +285,9 @@ function DetailsTab({ site }: { site: Site }) {
     queryFn: () => getSiteTariff(site.id),
   });
 
-  const { data: officeHours } = useQuery({
-    queryKey: queryKeys.siteOfficeHours(site.id),
-    queryFn: () => getSiteOfficeHours(site.id),
+  const { data: openingHours } = useQuery({
+    queryKey: queryKeys.siteOpeningHours(site.id),
+    queryFn: () => getSiteOpeningHours(site.id),
   });
 
   const address = [site.addressLine1, site.city, site.postcode]
@@ -375,13 +375,13 @@ function DetailsTab({ site }: { site: Site }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Office hours</CardTitle>
+          <CardTitle>Opening hours</CardTitle>
         </CardHeader>
         <CardContent>
-          {officeHours && officeHours.length > 0 ? (
+          {openingHours && openingHours.length > 0 ? (
             <dl>
               {DAY_NAMES.map((name, i) => {
-                const entry = officeHours.find((e) => e.dayOfWeek === i);
+                const entry = openingHours.find((e) => e.dayOfWeek === i);
                 return (
                   <div
                     key={i}
@@ -390,7 +390,12 @@ function DetailsTab({ site }: { site: Site }) {
                     <dt className="text-muted-foreground">{name}</dt>
                     <dd className="col-span-2">
                       {entry ? (
-                        `${entry.openTime} – ${entry.closeTime}`
+                        entry.openTime === "00:00" &&
+                        entry.closeTime === "24:00" ? (
+                          "All day"
+                        ) : (
+                          `${entry.openTime} – ${entry.closeTime}`
+                        )
                       ) : (
                         <span className="text-muted-foreground italic">
                           Closed

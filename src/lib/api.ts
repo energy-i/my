@@ -3,7 +3,7 @@ import type {
   Area,
   Consumption,
   ConsumptionInterval,
-  OfficeHoursEntry,
+  OpeningHoursEntry,
   OrganisationWithSites,
   OrganisationWithUsers,
   PaginatedAlerts,
@@ -291,14 +291,14 @@ export async function getSiteTariff(siteId: string): Promise<Tariff | null> {
   }
 }
 
-export async function getSiteOfficeHours(
+export async function getSiteOpeningHours(
   siteId: string,
-): Promise<OfficeHoursEntry[]> {
+): Promise<OpeningHoursEntry[]> {
   try {
-    const { officeHours } = await apiFetch<{ officeHours: OfficeHoursEntry[] }>(
-      `/sites/${siteId}/office-hours`,
-    );
-    return officeHours;
+    const { openingHours } = await apiFetch<{
+      openingHours: OpeningHoursEntry[];
+    }>(`/sites/${siteId}/opening-hours`);
+    return openingHours;
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       return [];

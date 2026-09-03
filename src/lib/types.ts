@@ -51,8 +51,6 @@ export type Site = {
   longitude: number | null;
   area: number | null;
   eac: number | null;
-  commsVendor: string | null;
-  commsId: string | null;
   meterType: MeterType | null;
   createdAt: string;
   updatedAt: string;
@@ -99,7 +97,7 @@ export type Consumption = {
 
 export type AlertType = "ALERT" | "OPPORTUNITY" | "INSIGHT";
 
-export type OfficeHoursEntry = {
+export type OpeningHoursEntry = {
   id: string;
   dayOfWeek: number;
   openTime: string;

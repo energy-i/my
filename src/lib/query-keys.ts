@@ -16,7 +16,7 @@ export const queryKeys = {
   siteConsumption: (id: string, range: { from: string; to: string }) =>
     ["sites", id, "consumption", range] as const,
   siteTariff: (id: string) => ["sites", id, "tariff"] as const,
-  siteOfficeHours: (id: string) => ["sites", id, "office-hours"] as const,
+  siteOpeningHours: (id: string) => ["sites", id, "opening-hours"] as const,
   areaConsumption: (id: string, range: { from: string; to: string }) =>
     ["areas", id, "consumption", range] as const,
   alerts: (params: {

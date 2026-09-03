@@ -44,8 +44,6 @@ type Site = {
   longitude: number | null;
   area: number | null;
   eac: number | null;
-  commsVendor: string | null;
-  commsId: string | null;
   meterType: string | null;
   createdAt: string;
   updatedAt: string;
@@ -73,8 +71,6 @@ function resetState() {
         longitude: null,
         area: 250,
         eac: 42000,
-        commsVendor: null,
-        commsId: null,
         meterType: null,
         createdAt: NOW,
         updatedAt: NOW,
@@ -324,8 +320,6 @@ export function installApiStubs(apiBaseUrl: string) {
         longitude: null,
         area: body.area ?? null,
         eac: body.eac ?? null,
-        commsVendor: null,
-        commsId: null,
         meterType: null,
         createdAt: NOW,
         updatedAt: NOW,
