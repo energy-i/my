@@ -26,6 +26,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { getAlerts } from "@/lib/api";
+import { getOrganisation } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import type { AlertType } from "@/lib/types";
 
@@ -62,7 +63,13 @@ export const Route = createFileRoute("/_authed/alerts")({
 
 function AlertsPage() {
   const { user } = Route.useRouteContext();
-  const hasAlertsAccess = user.organisation.hasAlertsAccess;
+  const { data: organisation } = useQuery({
+    queryKey: queryKeys.organisation,
+    queryFn: getOrganisation,
+  });
+  const hasAlertsAccess =
+    user.organisation.hasAlertsAccess ||
+    organisation?.sites.some((site) => site.tier === "OPTIMISE") === true;
   const navigate = useNavigate({ from: "/alerts" });
   const { view, type = [], page = 1 } = Route.useSearch();
   const posthog = usePostHog();

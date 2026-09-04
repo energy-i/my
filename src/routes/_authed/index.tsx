@@ -75,7 +75,9 @@ function DashboardPage() {
   });
 
   const hasSites = !!organisation && organisation.sites.length > 0;
-  const hasAlertsAccess = !!organisation?.hasAlertsAccess;
+  const hasAlertsAccess =
+    !!organisation?.hasAlertsAccess ||
+    organisation?.sites.some((site) => site.tier === "OPTIMISE") === true;
 
   const { data: alertsData } = useQuery({
     queryKey: queryKeys.alerts({
