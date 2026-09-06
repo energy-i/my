@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
   BellIcon,
@@ -15,8 +14,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { getOrganisation } from "@/lib/api";
-import { queryKeys } from "@/lib/query-keys";
 import { isAdminRole, type Organisation, type User } from "@/lib/types";
 
 export function NavMain({
@@ -25,13 +22,6 @@ export function NavMain({
   user: User & { organisation: Organisation };
 }) {
   const isAdmin = isAdminRole(user.role);
-  const { data: organisation } = useQuery({
-    queryKey: queryKeys.organisation,
-    queryFn: getOrganisation,
-  });
-  const hasAlertsAccess =
-    user.organisation.hasAlertsAccess ||
-    organisation?.sites.some((site) => site.tier === "OPTIMISE") === true;
 
   // Include the org name in the mailto subject so support can identify the
   // tenant without asking. `encodeURIComponent` handles spaces / punctuation.
@@ -59,16 +49,14 @@ export function NavMain({
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {hasAlertsAccess ? (
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link to="/alerts" search={{ view: "active" }}>
-                  <BellIcon />
-                  <span>Alerts</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ) : null}
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/alerts" search={{ view: "active" }}>
+                <BellIcon />
+                <span>Alerts</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           {isAdmin ? (
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
