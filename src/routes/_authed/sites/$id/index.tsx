@@ -9,6 +9,7 @@ import { AlertsList } from "@/components/alerts-list";
 import {
   computeWindow,
   ConsumptionChart,
+  defaultRange,
   formatRange,
   parseRangeSearch,
   type Range,
@@ -110,7 +111,12 @@ function SiteDetailPage() {
 function ConsumptionTab({ siteId }: { siteId: string }) {
   const navigate = useNavigate({ from: "/sites/$id" });
   const search = Route.useSearch();
-  const range = React.useMemo(() => parseRangeSearch(search), [search]);
+  const hasExplicitRange = Boolean(search.from && search.to);
+  const [todayRange, setTodayRange] = React.useState(defaultRange);
+  const range = React.useMemo(
+    () => (hasExplicitRange ? parseRangeSearch(search) : todayRange),
+    [hasExplicitRange, search, todayRange],
+  );
 
   const setRange = (next: Range) => {
     navigate({ search: (prev) => ({ ...prev, ...toRangeSearch(next) }) });
@@ -122,6 +128,15 @@ function ConsumptionTab({ siteId }: { siteId: string }) {
     refetchInterval: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
+
+  React.useEffect(() => {
+    if (hasExplicitRange) return;
+
+    const currentDay = new Date().toDateString();
+    if (range.from.toDateString() !== currentDay) {
+      setTodayRange(defaultRange());
+    }
+  }, [consumptionQuery.dataUpdatedAt, hasExplicitRange, range.from]);
 
   const areasQuery = useQuery({
     queryKey: queryKeys.siteAreas(siteId),

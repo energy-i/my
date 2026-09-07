@@ -6,6 +6,7 @@ import * as React from "react";
 import {
   computeWindow,
   ConsumptionChart,
+  defaultRange,
   parseRangeSearch,
   type Range,
   rangeSearchSchema,
@@ -45,7 +46,12 @@ function AreaDetailPage() {
   const { id: siteId, areaId } = Route.useParams();
   const navigate = useNavigate({ from: "/sites/$id/areas/$areaId" });
   const search = Route.useSearch();
-  const range = React.useMemo(() => parseRangeSearch(search), [search]);
+  const hasExplicitRange = Boolean(search.from && search.to);
+  const [todayRange, setTodayRange] = React.useState(defaultRange);
+  const range = React.useMemo(
+    () => (hasExplicitRange ? parseRangeSearch(search) : todayRange),
+    [hasExplicitRange, search, todayRange],
+  );
 
   const setRange = (next: Range) => {
     navigate({ search: () => toRangeSearch(next) });
@@ -63,6 +69,15 @@ function AreaDetailPage() {
     refetchInterval: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
   });
+
+  React.useEffect(() => {
+    if (hasExplicitRange) return;
+
+    const currentDay = new Date().toDateString();
+    if (range.from.toDateString() !== currentDay) {
+      setTodayRange(defaultRange());
+    }
+  }, [consumptionQuery.dataUpdatedAt, hasExplicitRange, range.from]);
 
   if (!area) return null;
 
