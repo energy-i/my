@@ -35,7 +35,9 @@ export const router = createRouter({
   defaultPendingComponent: RouterPending,
   defaultPendingMs: 0,
   defaultNotFoundComponent: NotFoundPage,
-  defaultErrorComponent: ({ error }) => <ErrorPage error={normalizeError(error)} />,
+  defaultErrorComponent: ({ error }) => (
+    <ErrorPage error={normalizeError(error)} />
+  ),
   scrollRestoration: true,
 });
 
