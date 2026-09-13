@@ -6,7 +6,7 @@ import { queryClient } from "@/lib/query-client";
 
 import { routeTree } from "./routeTree.gen";
 
-function normalizeError(error: unknown) {
+function normalizeError(error: unknown): Error {
   if (error instanceof Error) return error;
   if (typeof error === "string") return new Error(error);
   if (
