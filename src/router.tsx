@@ -6,6 +6,20 @@ import { queryClient } from "@/lib/query-client";
 
 import { routeTree } from "./routeTree.gen";
 
+function normalizeError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  if (typeof error === "string") return new Error(error);
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return new Error(error.message);
+  }
+  return new Error("An unexpected error occurred.");
+}
+
 function RouterPending() {
   return (
     <div className="flex min-h-svh items-center justify-center bg-background">
@@ -21,7 +35,9 @@ export const router = createRouter({
   defaultPendingComponent: RouterPending,
   defaultPendingMs: 0,
   defaultNotFoundComponent: NotFoundPage,
-  defaultErrorComponent: ({ error }) => <ErrorPage error={error} />,
+  defaultErrorComponent: ({ error }) => (
+    <ErrorPage error={normalizeError(error)} />
+  ),
   scrollRestoration: true,
 });
 
