@@ -7,7 +7,23 @@ export function initSentry(): void {
   Sentry.init({
     dsn,
     tracesSampleRate: 1,
-    sendDefaultPii: true,
+    dataCollection: {
+      userInfo: true,
+      cookies: true,
+      httpHeaders: { request: true, response: true },
+      httpBodies: [
+        "incomingRequest",
+        "outgoingRequest",
+        "incomingResponse",
+        "outgoingResponse",
+      ],
+      urlQueryParams: true,
+      graphQL: { document: true, variables: true },
+      genAI: { inputs: true, outputs: true },
+      databaseQueryData: true,
+      stackFrameVariables: true,
+      frameContextLines: 7,
+    },
     integrations: [Sentry.browserTracingIntegration()],
   });
 }
