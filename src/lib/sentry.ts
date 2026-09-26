@@ -7,7 +7,6 @@ export function initSentry(): void {
   Sentry.init({
     dsn,
     tracesSampleRate: 1,
-    sendDefaultPii: true,
     integrations: [Sentry.browserTracingIntegration()],
   });
 }
